@@ -5,9 +5,11 @@ import lombok.Data;
 /**
  * Класс для предоставления UDR отчётов
  */
+
 @Data
 public class UDR {
     private String msisdn;
-    private String incomingCallTotalTime;
-    private String outcomingCallTotalTime;
+    private CallDuration incomingCall;
+    private CallDuration outcomingCall;
 }
+

@@ -28,21 +28,51 @@
 #### Шаги для запуска
 1. Клонируйте репозиторий:
 
-`bash
-Copy
-git clone https://github.com/your-repository/roaming-cdr-service.git
+`git clone https://github.com/your-repository/roaming-cdr-service.git
 cd roaming-cdr-service`
 
 2. Соберите проект:
 
-`bash
-Copy
-mvn clean install`
+`mvn clean install`
 
 3. Запустите приложение:
 
-`bash
-Copy
-java -jar target/roaming-cdr-service.jar`
+`java -jar target/roaming-cdr-service.jar`
 
 4. Приложение будет доступно по адресу: http://localhost:8080.
+
+#### Эндпоинты (Swagger)
+
+http://localhost:8080/swagger-ui.html
+
+### Описание технического решения
+
+#### ER-диаграмма баз данных
+
+// TODO: сделать
+
+#### Генератор CDR-записей
+
+// TODO: подробнее описать
+
+В таблицу subscriber добавляются 10 абонентов.
+
+Генерация на протяжении года. 
+
+// TODO: опираться на исследование/статью
+В качестве ограничений принимается, что звонки происходят по экспоненциальному закону распределения. 
+Средний интервал между звонками — 1 час
+Средняя длительность звонка — 10 минут
+
+Учитывается, что абоненты одновременно могут разговаривать только по 1 линии.
+
+#### REST API для работы с UDR
+
+http://localhost:8080/swagger-ui.html
+
+по одному переданному абоненту. 
+либо за запрошенный месяц, либо за весь тарифицируемый период.
+
+UDR записи по всем нашим абонентам за запрошенный месяц.
+
+// TODO: описать формат

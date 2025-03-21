@@ -12,5 +12,12 @@ import java.util.List;
  */
 @Repository
 public interface CDRRepository extends JpaRepository<CDR, Long> {
+    // Найти записи, где msisdn равен переданному значению и callStartTime находится между start и end
     List<CDR> findByMsisdnAndCallStartTimeBetween(String msisdn, LocalDateTime start, LocalDateTime end);
+
+    // Найти записи, где otherMsisdn равен переданному значению и callStartTime находится между start и end
+    List<CDR> findByOtherMsisdnAndCallStartTimeBetween(String otherMsisdn, LocalDateTime start, LocalDateTime end);
+
+    // Найти все записи, где callStartTime находится между start и end
+    List<CDR> findByCallStartTimeBetween(LocalDateTime start, LocalDateTime end);
 }
