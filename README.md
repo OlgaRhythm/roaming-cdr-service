@@ -44,7 +44,7 @@ cd roaming-cdr-service`
 
 `java -jar target/roaming-cdr-service-0.0.1-SNAPSHOT.jar`
 
-4. Приложение будет доступно по адресу: http://localhost:8080.
+3. Приложение будет доступно по адресу: http://localhost:8080.
 
 #### Эндпоинты (Swagger)
 
