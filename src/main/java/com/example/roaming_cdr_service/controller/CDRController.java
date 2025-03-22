@@ -4,6 +4,7 @@ import com.example.roaming_cdr_service.model.CDR;
 import com.example.roaming_cdr_service.repository.CDRRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -52,6 +54,7 @@ public class CDRController {
             responses = {
                     @ApiResponse(responseCode = "200", description = "Отчет успешно создан"),
                     @ApiResponse(responseCode = "400", description = "Неверные параметры запроса"),
+                    @ApiResponse(responseCode = "404", description = "Данные для абонента не найдены"),
                     @ApiResponse(responseCode = "500", description = "Ошибка при создании отчета")
             }
     )
@@ -66,24 +69,36 @@ public class CDRController {
             @Parameter(description = "Конечная дата в формате yyyy-MM-dd'T'HH:mm:ss", example = "2025-02-28T23:59:59")
             @RequestParam String endDate
     ) {
+
+        LocalDateTime start; // = LocalDateTime.parse(startDate);
+        LocalDateTime end; // = LocalDateTime.parse(endDate);
+
         try {
-            LocalDateTime start = LocalDateTime.parse(startDate);
-            LocalDateTime end = LocalDateTime.parse(endDate);
+            start = LocalDateTime.parse(startDate);
+            end = LocalDateTime.parse(endDate);
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Неверный формат даты. Используйте yyyy-MM-dd'T'HH:mm:ss.");
+        }
 
-            // Получаем данные из БД
-            List<CDR> cdrsAsCaller = cdrRepository.findByMsisdnAndCallStartTimeBetween(msisdn, start, end);
-            List<CDR> cdrsAsReceiver = cdrRepository.findByOtherMsisdnAndCallStartTimeBetween(msisdn, start, end);
+        // Получаем данные из БД
+        List<CDR> cdrsAsCaller = cdrRepository.findByMsisdnAndCallStartTimeBetween(msisdn, start, end);
+        List<CDR> cdrsAsReceiver = cdrRepository.findByOtherMsisdnAndCallStartTimeBetween(msisdn, start, end);
 
-            // Объединяем результаты
-            List<CDR> cdrs = new ArrayList<>();
-            cdrs.addAll(cdrsAsCaller);
-            cdrs.addAll(cdrsAsReceiver);
+        if (cdrsAsCaller.isEmpty() && cdrsAsReceiver.isEmpty()) {
+            throw new EntityNotFoundException("Для абонента с номером " + msisdn + " не найдены записи за указанный период.");
+        }
 
-            // Генерируем уникальный UUID для имени файла
-            String uuid = UUID.randomUUID().toString();
-            String fileName = msisdn + "_" + uuid + ".csv";
-            String filePath = "reports/" + fileName;
+        // Объединяем результаты
+        List<CDR> cdrs = new ArrayList<>();
+        cdrs.addAll(cdrsAsCaller);
+        cdrs.addAll(cdrsAsReceiver);
 
+        // Генерируем уникальный UUID для имени файла
+        String uuid = UUID.randomUUID().toString();
+        String fileName = msisdn + "_" + uuid + ".csv";
+        String filePath = "reports/" + fileName;
+
+        try {
             // Создаем директорию, если она не существует
             Files.createDirectories(Paths.get("reports"));
 

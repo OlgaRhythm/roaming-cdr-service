@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.PersistenceConstructor;
 
 /**
  * Класс для представления абонента.
@@ -37,4 +38,5 @@ public class Subscriber {
     public Subscriber(String msisdn) {
         this.msisdn = msisdn;
     }
+
 }

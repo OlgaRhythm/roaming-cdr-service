@@ -52,6 +52,9 @@ http://localhost:8080/swagger-ui.html
 
 После выполнения тестов отчёт о покрытии будет доступен в папке target/site/jacoco/index.html.
 
+Покрытие тестами:
+![img.png](img.png)
+
 #### ER-диаграмма базы данных
 
 // TODO: сделать

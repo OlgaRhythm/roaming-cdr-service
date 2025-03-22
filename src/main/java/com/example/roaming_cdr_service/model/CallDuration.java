@@ -30,7 +30,7 @@ public class CallDuration {
      * @param totalSeconds Общее время звонков в секундах.
      * @return Строка в формате "HH:mm:ss".
      */
-    private String formatDuration(long totalSeconds) {
+    public String formatDuration(long totalSeconds) {
         long hours = totalSeconds / 3600;
         long minutes = (totalSeconds % 3600) / 60;
         long seconds = totalSeconds % 60;

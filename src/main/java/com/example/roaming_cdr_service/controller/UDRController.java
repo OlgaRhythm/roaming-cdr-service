@@ -8,11 +8,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,11 +44,11 @@ public class UDRController {
      */
     @Operation(
             summary = "Получить UDR для одного абонента",
-            description = "Возвращает UDR для указанного абонента за указанный месяц или за весь период.",
+            description = "Возвращает UDR для указанного абонента за указанный месяц или за весь период (если месяц не передан — за последний год).",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Успешный запрос"),
                     @ApiResponse(responseCode = "400", description = "Неверный формат месяца"),
-                    @ApiResponse(responseCode = "404", description = "Абонент не найден")
+                    @ApiResponse(responseCode = "404", description = "Для абонента не найдены записи за указанный период")
             }
     )
     @GetMapping("/{msisdn}")
@@ -57,13 +59,32 @@ public class UDRController {
             @Parameter(description = "Месяц в формате yyyy-MM", example = "2025-02")
             @RequestParam(required = false) String month
     ) {
-        LocalDateTime startDate = month != null ? LocalDateTime.parse(month + "-01T00:00:00") : LocalDateTime.now().minusYears(1);
-        LocalDateTime endDate = month != null ? startDate.plusMonths(1) : LocalDateTime.now();
+        LocalDateTime startDate;
+        LocalDateTime endDate;
+
+        // Проверяем формат месяца
+        try {
+            if (month != null) {
+                startDate = LocalDateTime.parse(month + "-01T00:00:00");
+                endDate = startDate.plusMonths(1);
+            } else {
+                startDate = LocalDateTime.now().minusYears(1);
+                endDate = LocalDateTime.now();
+            }
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Неверный формат месяца. Используйте yyyy-MM.");
+        }
 
         List<CDR> cdrsAsCaller = cdrRepository.findByMsisdnAndCallStartTimeBetween(msisdn, startDate, endDate);
-
         List<CDR> cdrsAsReceiver = cdrRepository.findByOtherMsisdnAndCallStartTimeBetween(msisdn, startDate, endDate);
 
+        System.out.println("🔍 Найдено CDR-записей как звонящий: " + cdrsAsCaller.size());
+        System.out.println("🔍 Найдено CDR-записей как принимающий: " + cdrsAsReceiver.size());
+
+        // Проверяем, что есть такой абонент
+        if (cdrsAsCaller.isEmpty() && cdrsAsReceiver.isEmpty()) {
+            throw new EntityNotFoundException("Для абонента с номером " + msisdn + " не найдены записи за указанный период.");
+        }
         List<CDR> allCdrs = new ArrayList<>();
         allCdrs.addAll(cdrsAsCaller);
         allCdrs.addAll(cdrsAsReceiver);
@@ -101,8 +122,16 @@ public class UDRController {
             @Parameter(description = "Месяц в формате yyyy-MM", example = "2025-02")
             @RequestParam String month
     ) {
-        LocalDateTime startDate = LocalDateTime.parse(month + "-01T00:00:00");
-        LocalDateTime endDate = startDate.plusMonths(1);
+        LocalDateTime startDate; // = LocalDateTime.parse(month + "-01T00:00:00");
+        LocalDateTime endDate; // = startDate.plusMonths(1);
+
+        // Проверяем формат
+        try {
+            startDate = LocalDateTime.parse(month + "-01T00:00:00");
+            endDate = startDate.plusMonths(1);
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Неверный формат месяца. Используйте yyyy-MM.");
+        }
 
         List<CDR> allCdrs = cdrRepository.findByCallStartTimeBetween(startDate, endDate);
 
