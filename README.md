@@ -36,8 +36,11 @@ cd roaming-cdr-service`
 
 Скачайте последний релиз, который находится в `releases/roaming-cdr-service-0.0.1-SNAPSHOT.jar`
 
+ИЛИ
 
-3. Запустите приложение:
+Скачайте последний релиз по ссылке https://github.com/OlgaRhythm/roaming-cdr-service/releases/tag/v1.0.0
+
+2. Запустите приложение:
 
 `java -jar target/roaming-cdr-service-0.0.1-SNAPSHOT.jar`
 
