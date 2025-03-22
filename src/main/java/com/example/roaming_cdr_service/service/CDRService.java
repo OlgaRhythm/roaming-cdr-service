@@ -15,7 +15,10 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Класс для генерации CDR записей
+ * Сервис для генерации CDR (Call Data Record) записей.
+ * <p>
+ * Генерирует тестовые данные о звонках и сохраняет их в базу данных.
+ * </p>
  */
 @Service
 public class CDRService {
@@ -45,11 +48,11 @@ public class CDRService {
     }
 
     /**
-     * Генерирует случайные CDR записи и сохраняет их в базу данных
+     * Генерирует CDR записи за один год для всех абонентов.
      */
     @Transactional
     public void generateCDRs() {
-        List<Subscriber> subscribers = subscriberRepository.findAll(); // Получаем всех абонентов
+        List<Subscriber> subscribers = subscriberRepository.findAll();
 
         LocalDateTime startDate = LocalDateTime.now().minusYears(1); // Начало периода генерации (год назад)
         LocalDateTime endDate = LocalDateTime.now(); // Конец периода генерации (текущее время)
@@ -65,7 +68,7 @@ public class CDRService {
         int count = 0;
 
         for (LocalDateTime currentDate = startDate; currentDate.isBefore(endDate); currentDate = currentDate.plusSeconds(getExponentialRandom(lambdaCallInterval))) {
-            // Выбираем случайных абонентов
+
             if (subscribers.isEmpty()) {
                 throw new IllegalStateException("Список абонентов пуст, невозможно сгенерировать CDR!");
             }
@@ -77,32 +80,26 @@ public class CDRService {
                 continue; // Пропускаем этот звонок
             }
 
-            // Генерируем CDR
             CDR cdr = new CDR();
-            cdr.setCallType(ThreadLocalRandom.current().nextBoolean() ? "01" : "02"); // Случайный тип звонка
-            cdr.setMsisdn(caller.getMsisdn()); // Номер абонента
-            cdr.setOtherMsisdn(receiver.getMsisdn()); // Номер другого абонента
+            cdr.setCallType(ThreadLocalRandom.current().nextBoolean() ? "01" : "02");
+            cdr.setMsisdn(caller.getMsisdn());
+            cdr.setOtherMsisdn(receiver.getMsisdn());
             cdr.setCallStartTime(currentDate);
 
-            // Устанавливаем время окончания звонка
             LocalDateTime callEndTime = currentDate.plusSeconds(getExponentialRandom(lambdaCallDuration));
             cdr.setCallEndTime(callEndTime);
 
-            // Сохраняем запись в базу данных (пакетно)
             cdrRepository.save(cdr);
             count++;
 
-            // Обновляем мапу занятости
             busySubscribers.put(caller.getMsisdn(), callEndTime);
             busySubscribers.put(receiver.getMsisdn(), callEndTime);
 
-            // Пакетная фиксация
             if (count % batchSize == 0) {
                 cdrRepository.flush();
             }
         }
 
-        // Фиксация оставшихся записей
         if (count % batchSize != 0) {
             cdrRepository.flush();
         }

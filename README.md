@@ -47,6 +47,11 @@ http://localhost:8080/swagger-ui.html
 
 ### Описание технического решения
 
+Документация Javadoc: `mvn javadoc:javadoc`
+<br>Документация будет доступна в папке target/reports/apidocs
+
+После выполнения тестов отчёт о покрытии будет доступен в папке target/site/jacoco/index.html.
+
 #### ER-диаграмма базы данных
 
 // TODO: сделать

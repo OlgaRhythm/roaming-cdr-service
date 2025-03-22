@@ -6,7 +6,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Абонент
+ * Класс для представления абонента.
+ * <p>
+ * Содержит информацию о номере абонента (MSISDN).
+ * </p>
  */
 @Data
 @Entity
@@ -14,12 +17,23 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Subscriber {
+    /**
+     * Уникальный идентификатор абонента.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String msisdn; // Номер абонента
+    /**
+     * Номер абонента (MSISDN).
+     */
+    private String msisdn;
 
+    /**
+     * Конструктор для создания абонента с указанным номером.
+     *
+     * @param msisdn Номер абонента.
+     */
     public Subscriber(String msisdn) {
         this.msisdn = msisdn;
     }

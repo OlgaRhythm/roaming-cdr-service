@@ -24,7 +24,10 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Обработка HTTP-запросов
+ * Контроллер для работы с CDR (Call Data Record) отчётами.
+ * <p>
+ * Предоставляет REST API для генерации CDR-отчётов в формате CSV.
+ * </p>
  */
 @RestController
 @RequestMapping("/cdr")
@@ -32,6 +35,17 @@ public class CDRController {
     @Autowired
     private CDRRepository cdrRepository;
 
+    /**
+     * Генерирует CDR-отчёт для указанного абонента за заданный период времени.
+     * <p>
+     * Отчёт сохраняется в формате CSV в директорию {@code /reports}.
+     * </p>
+     *
+     * @param msisdn    Номер абонента, для которого генерируется отчёт.
+     * @param startDate Начальная дата периода в формате {@code yyyy-MM-dd'T'HH:mm:ss}.
+     * @param endDate   Конечная дата периода в формате {@code yyyy-MM-dd'T'HH:mm:ss}.
+     * @return Ответ с UUID сгенерированного отчёта или сообщением об ошибке.
+     */
     @Operation(
             summary = "Сгенерировать CDR-отчет",
             description = "Генерирует CDR-отчет для указанного абонента за заданный период.",
@@ -53,7 +67,6 @@ public class CDRController {
             @RequestParam String endDate
     ) {
         try {
-            // Парсим даты
             LocalDateTime start = LocalDateTime.parse(startDate);
             LocalDateTime end = LocalDateTime.parse(endDate);
 

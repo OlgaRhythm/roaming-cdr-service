@@ -8,16 +8,39 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Интерфейс для работы с базой данных
+ * Репозиторий для работы с CDR (Call Data Record) записями.
+ * <p>
+ * Предоставляет методы для поиска записей о звонках в базе данных.
+ * </p>
  */
 @Repository
 public interface CDRRepository extends JpaRepository<CDR, Long> {
-    // Найти записи, где msisdn равен переданному значению и callStartTime находится между start и end
+    /**
+     * Находит все CDR записи для указанного абонента (msisdn) в заданном временном диапазоне.
+     *
+     * @param msisdn Номер абонента.
+     * @param start  Начальная дата диапазона.
+     * @param end    Конечная дата диапазона.
+     * @return Список CDR записей.
+     */
     List<CDR> findByMsisdnAndCallStartTimeBetween(String msisdn, LocalDateTime start, LocalDateTime end);
 
-    // Найти записи, где otherMsisdn равен переданному значению и callStartTime находится между start и end
+    /**
+     * Находит все CDR записи, где указанный абонент (otherMsisdn) был получателем звонка в заданном временном диапазоне.
+     *
+     * @param otherMsisdn Номер абонента-получателя.
+     * @param start       Начальная дата диапазона.
+     * @param end         Конечная дата диапазона.
+     * @return Список CDR записей.
+     */
     List<CDR> findByOtherMsisdnAndCallStartTimeBetween(String otherMsisdn, LocalDateTime start, LocalDateTime end);
 
-    // Найти все записи, где callStartTime находится между start и end
+    /**
+     * Находит все CDR записи в заданном временном диапазоне.
+     *
+     * @param start Начальная дата диапазона.
+     * @param end   Конечная дата диапазона.
+     * @return Список CDR записей.
+     */
     List<CDR> findByCallStartTimeBetween(LocalDateTime start, LocalDateTime end);
 }
