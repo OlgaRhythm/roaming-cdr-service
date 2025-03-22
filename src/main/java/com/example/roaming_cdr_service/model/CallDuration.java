@@ -10,6 +10,11 @@ import lombok.Data;
  */
 @Data
 public class CallDuration {
+
+    private static final int SECONDS_IN_HOUR = 3600;
+    private static final int SECONDS_IN_MINUTE = 60;
+    private static final String TIME_FORMAT = "%02d:%02d:%02d";
+
     /**
      * Общее время звонков в формате "HH:mm:ss".
      */
@@ -31,9 +36,8 @@ public class CallDuration {
      * @return Строка в формате "HH:mm:ss".
      */
     public String formatDuration(long totalSeconds) {
-        long hours = totalSeconds / 3600;
-        long minutes = (totalSeconds % 3600) / 60;
-        long seconds = totalSeconds % 60;
-        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
-    }
+        long hours = totalSeconds / SECONDS_IN_HOUR;
+        long minutes = (totalSeconds % SECONDS_IN_HOUR) / SECONDS_IN_MINUTE;
+        long seconds = totalSeconds % SECONDS_IN_MINUTE;
+        return String.format(TIME_FORMAT, hours, minutes, seconds);    }
 }

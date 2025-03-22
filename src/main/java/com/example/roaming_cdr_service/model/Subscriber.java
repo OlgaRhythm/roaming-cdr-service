@@ -18,6 +18,7 @@ import org.springframework.data.annotation.PersistenceConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Subscriber {
+
     /**
      * Уникальный идентификатор абонента.
      */

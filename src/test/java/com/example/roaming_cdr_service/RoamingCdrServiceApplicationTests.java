@@ -1,6 +1,6 @@
 package com.example.roaming_cdr_service;
 
-import com.example.roaming_cdr_service.service.CDRService;
+import com.example.roaming_cdr_service.service.impl.CDRServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class RoamingCdrServiceApplicationTests {
 
 	@Mock
-	private CDRService cdrService; // Используем @Mock вместо @MockBean
+	private CDRServiceImpl cdrServiceImpl; // Используем @Mock вместо @MockBean
 
 	@InjectMocks
 	private RoamingCdrServiceApplication application; // Внедряем моки в тестируемый класс
@@ -46,7 +46,7 @@ class RoamingCdrServiceApplicationTests {
 	/**
 	 * Тест для метода {@link RoamingCdrServiceApplication#run(String...)}.
 	 * <p>
-	 * Проверяет, что метод {@link CDRService#generateCDRs()} вызывается при запуске приложения.
+	 * Проверяет, что метод {@link CDRServiceImpl#generateCDRs()} вызывается при запуске приложения.
 	 * </p>
 	 */
 	@Test
@@ -55,19 +55,19 @@ class RoamingCdrServiceApplicationTests {
 		application.run();
 
 		// Проверка, что метод generateCDRs был вызван
-		verify(cdrService, times(1)).generateCDRs();
+		verify(cdrServiceImpl, times(1)).generateCDRs();
 	}
 
 	/**
 	 * Тест для метода {@link RoamingCdrServiceApplication#run(String...)}.
 	 * <p>
-	 * Проверяет обработку исключения, если {@link CDRService#generateCDRs()} выбрасывает исключение.
+	 * Проверяет обработку исключения, если {@link CDRServiceImpl#generateCDRs()} выбрасывает исключение.
 	 * </p>
 	 */
 	@Test
 	void testRun_Exception() throws Exception {
 		// Настройка mock-объекта для выбрасывания исключения
-		doThrow(new RuntimeException("Ошибка генерации CDR")).when(cdrService).generateCDRs();
+		doThrow(new RuntimeException("Ошибка генерации CDR")).when(cdrServiceImpl).generateCDRs();
 
 		// Вызов метода run и проверка исключения
 		Exception exception = assertThrows(RuntimeException.class, () -> application.run());
@@ -76,6 +76,6 @@ class RoamingCdrServiceApplicationTests {
 		assertEquals("Ошибка генерации CDR", exception.getMessage());
 
 		// Проверка, что метод generateCDRs был вызван
-		verify(cdrService, times(1)).generateCDRs();
+		verify(cdrServiceImpl, times(1)).generateCDRs();
 	}
 }

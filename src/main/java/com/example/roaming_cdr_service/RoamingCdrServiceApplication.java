@@ -1,7 +1,6 @@
 package com.example.roaming_cdr_service;
 
-import com.example.roaming_cdr_service.model.Subscriber;
-import com.example.roaming_cdr_service.service.CDRService;
+import com.example.roaming_cdr_service.service.impl.CDRServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -11,13 +10,14 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * Основной класс приложения Roaming CDR Service.
  * <p>
  * Этот класс является точкой входа в приложение. Он запускает Spring Boot приложение
- * и инициализирует генерацию CDR записей с помощью {@link CDRService}.
+ * и инициализирует генерацию CDR записей с помощью {@link CDRServiceImpl}.
  * </p>
  */
 @SpringBootApplication
 public class RoamingCdrServiceApplication implements CommandLineRunner {
+
 	@Autowired
-	private CDRService cdrService;
+	private CDRServiceImpl cdrServiceImpl;
 
 	/**
 	 * Точка входа в приложение.
@@ -31,7 +31,7 @@ public class RoamingCdrServiceApplication implements CommandLineRunner {
 	/**
 	 * Метод, который выполняется после запуска приложения.
 	 * <p>
-	 * Инициализирует генерацию CDR записей с помощью {@link CDRService}.
+	 * Инициализирует генерацию CDR записей с помощью {@link CDRServiceImpl}.
 	 * </p>
 	 *
 	 * @param args Аргументы командной строки.
@@ -39,6 +39,6 @@ public class RoamingCdrServiceApplication implements CommandLineRunner {
 	 */
 	@Override
 	public void run(String... args) throws Exception {
-		cdrService.generateCDRs();
+		cdrServiceImpl.generateCDRs();
 	}
 }

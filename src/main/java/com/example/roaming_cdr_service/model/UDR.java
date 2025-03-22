@@ -11,6 +11,7 @@ import lombok.Data;
  */
 @Data
 public class UDR {
+
     /**
      * Номер абонента (MSISDN).
      */

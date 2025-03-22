@@ -15,6 +15,7 @@ import java.util.List;
  */
 @Repository
 public interface CDRRepository extends JpaRepository<CDR, Long> {
+
     /**
      * Находит все CDR записи для указанного абонента (msisdn) в заданном временном диапазоне.
      *

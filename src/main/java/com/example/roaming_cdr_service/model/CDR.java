@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "cdr")
 public class CDR {
+
     /**
      * Уникальный идентификатор записи.
      */

@@ -2,6 +2,7 @@ package com.example.roaming_cdr_service.controller;
 
 import com.example.roaming_cdr_service.model.CDR;
 import com.example.roaming_cdr_service.repository.CDRRepository;
+import com.example.roaming_cdr_service.service.ICDRService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -26,7 +28,7 @@ import static org.mockito.Mockito.*;
 class CDRControllerTest {
 
     @Mock
-    private CDRRepository cdrRepository;
+    private ICDRService cdrService;
 
     @InjectMocks
     private CDRController cdrController;
@@ -50,6 +52,9 @@ class CDRControllerTest {
         String startDate = "2025-02-01T00:00:00";
         String endDate = "2025-02-28T23:59:59";
 
+        LocalDateTime start = LocalDateTime.parse(startDate);
+        LocalDateTime end = LocalDateTime.parse(endDate);
+
         CDR cdr = new CDR();
         cdr.setCallType("01");
         cdr.setMsisdn(msisdn);
@@ -57,9 +62,7 @@ class CDRControllerTest {
         cdr.setCallStartTime(LocalDateTime.now());
         cdr.setCallEndTime(LocalDateTime.now().plusMinutes(5));
 
-        when(cdrRepository.findByMsisdnAndCallStartTimeBetween(any(), any(), any())).thenReturn(Collections.singletonList(cdr));
-        when(cdrRepository.findByOtherMsisdnAndCallStartTimeBetween(any(), any(), any())).thenReturn(Collections.singletonList(cdr));
-
+        when(cdrService.getCDRsForSubscriber(eq(msisdn), any(), any())).thenReturn(List.of(cdr));
         // Вызов метода
         ResponseEntity<String> response = cdrController.generateCDRReport(msisdn, startDate, endDate);
 
@@ -104,8 +107,10 @@ class CDRControllerTest {
         String startDate = "2025-02-01T00:00:00";
         String endDate = "2025-02-28T23:59:59";
 
-        when(cdrRepository.findByMsisdnAndCallStartTimeBetween(any(), any(), any())).thenReturn(Collections.emptyList());
-        when(cdrRepository.findByOtherMsisdnAndCallStartTimeBetween(any(), any(), any())).thenReturn(Collections.emptyList());
+        LocalDateTime start = LocalDateTime.parse(startDate);
+        LocalDateTime end = LocalDateTime.parse(endDate);
+
+        when(cdrService.getCDRsForSubscriber(eq(msisdn), any(), any())).thenReturn(Collections.emptyList());
 
         // Вызов метода и проверка исключения
         Exception exception = assertThrows(EntityNotFoundException.class, () -> {
