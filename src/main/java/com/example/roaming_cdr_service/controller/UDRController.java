@@ -78,9 +78,6 @@ public class UDRController {
         List<CDR> cdrsAsCaller = cdrRepository.findByMsisdnAndCallStartTimeBetween(msisdn, startDate, endDate);
         List<CDR> cdrsAsReceiver = cdrRepository.findByOtherMsisdnAndCallStartTimeBetween(msisdn, startDate, endDate);
 
-        System.out.println("🔍 Найдено CDR-записей как звонящий: " + cdrsAsCaller.size());
-        System.out.println("🔍 Найдено CDR-записей как принимающий: " + cdrsAsReceiver.size());
-
         // Проверяем, что есть такой абонент
         if (cdrsAsCaller.isEmpty() && cdrsAsReceiver.isEmpty()) {
             throw new EntityNotFoundException("Для абонента с номером " + msisdn + " не найдены записи за указанный период.");
