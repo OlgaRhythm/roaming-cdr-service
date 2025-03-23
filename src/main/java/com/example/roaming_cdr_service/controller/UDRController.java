@@ -17,16 +17,13 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
  * Контроллер для работы с UDR (Usage Data Report) отчётами.
- * <p>
  * Предоставляет REST API для получения UDR отчётов по звонкам абонентов.
- * </p>
  */
 @RestController
 @RequestMapping("/udr")
@@ -130,11 +127,11 @@ public class UDRController {
     }
 
     private UDR createUDR(String msisdn, List<CDR> cdrs) {
-        UDR udr = new UDR();
-        udr.setMsisdn(msisdn);
-        udr.setIncomingCall(new CallDuration(getTotalCallDuration(cdrs, "02")));
-        udr.setOutcomingCall(new CallDuration(getTotalCallDuration(cdrs, "01")));
-        return udr;
+        return UDR.builder()
+                .msisdn(msisdn)
+                .incomingCall(new CallDuration(getTotalCallDuration(cdrs, "02")))
+                .outcomingCall(new CallDuration(getTotalCallDuration(cdrs, "01")))
+                .build();
     }
 
     private long getTotalCallDuration(List<CDR> cdrs, String callType) {

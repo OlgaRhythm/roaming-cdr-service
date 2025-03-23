@@ -9,9 +9,7 @@ import java.util.List;
 
 /**
  * Репозиторий для работы с CDR (Call Data Record) записями.
- * <p>
  * Предоставляет методы для поиска записей о звонках в базе данных.
- * </p>
  */
 @Repository
 public interface CDRRepository extends JpaRepository<CDR, Long> {

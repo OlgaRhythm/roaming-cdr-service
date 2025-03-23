@@ -1,7 +1,6 @@
 package com.example.roaming_cdr_service.controller;
 
 import com.example.roaming_cdr_service.model.CDR;
-import com.example.roaming_cdr_service.repository.CDRRepository;
 import com.example.roaming_cdr_service.service.ICDRService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,11 +20,19 @@ import static org.mockito.Mockito.*;
 
 /**
  * Unit-тесты для класса {@link CDRController}.
- * <p>
  * Тесты проверяют корректность работы методов контроллера, включая обработку успешных сценариев и ошибок.
- * </p>
  */
 class CDRControllerTest {
+
+    private static final String VALID_MSISDN = "79991112233";
+    private static final String OTHER_MSISDN = "79992223344";
+    private static final String START_DATE = "2025-02-01T00:00:00";
+    private static final String END_DATE = "2025-02-28T23:59:59";
+    private static final String INVALID_DATE = "invalid-date";
+    private static final String DATE_FORMAT_ERROR = "Неверный формат даты. Используйте yyyy-MM-dd'T'HH:mm:ss.";
+    private static final String REPORT_SUCCESS_MESSAGE = "Отчет успешно создан";
+    private static final String NO_DATA_ERROR_MESSAGE = "не найдены записи";
+
 
     @Mock
     private ICDRService cdrService;
@@ -41,30 +48,26 @@ class CDRControllerTest {
     /**
      * Тест для метода {@link CDRController#generateCDRReport(String, String, String)}.
      * Проверяет успешную генерацию отчёта.
-     * <p>
      * Ожидается, что метод вернет статус 200 и сообщение об успешном создании отчёта.
-     * </p>
      */
     @Test
     void testGenerateCDRReport_Success() {
         // Подготовка данных
-        String msisdn = "79991112233";
-        String startDate = "2025-02-01T00:00:00";
-        String endDate = "2025-02-28T23:59:59";
+        LocalDateTime start = LocalDateTime.parse(START_DATE);
+        LocalDateTime end = LocalDateTime.parse(END_DATE);
 
-        LocalDateTime start = LocalDateTime.parse(startDate);
-        LocalDateTime end = LocalDateTime.parse(endDate);
+        CDR cdr = CDR.builder()
+                .callType("01")
+                .msisdn(VALID_MSISDN)
+                .otherMsisdn(OTHER_MSISDN)
+                .callStartTime(LocalDateTime.now())
+                .callEndTime(LocalDateTime.now().plusMinutes(5))
+                .build();
 
-        CDR cdr = new CDR();
-        cdr.setCallType("01");
-        cdr.setMsisdn(msisdn);
-        cdr.setOtherMsisdn("79992223344");
-        cdr.setCallStartTime(LocalDateTime.now());
-        cdr.setCallEndTime(LocalDateTime.now().plusMinutes(5));
+        when(cdrService.getCDRsForSubscriber(eq(VALID_MSISDN), any(), any())).thenReturn(List.of(cdr));
 
-        when(cdrService.getCDRsForSubscriber(eq(msisdn), any(), any())).thenReturn(List.of(cdr));
         // Вызов метода
-        ResponseEntity<String> response = cdrController.generateCDRReport(msisdn, startDate, endDate);
+        ResponseEntity<String> response = cdrController.generateCDRReport(VALID_MSISDN, START_DATE, END_DATE);
 
         // Проверка результата
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -74,50 +77,36 @@ class CDRControllerTest {
     /**
      * Тест для метода {@link CDRController#generateCDRReport(String, String, String)}.
      * Проверяет обработку ошибки при неверном формате даты.
-     * <p>
      * Ожидается, что метод вернет статус 400 и сообщение об ошибке.
-     * </p>
      */
     @Test
     void testGenerateCDRReport_InvalidDateFormat() {
-        // Подготовка данных
-        String msisdn = "79991112233";
-        String startDate = "invalid-date";
-        String endDate = "2025-02-28T23:59:59";
 
         // Вызов метода и проверка исключения
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            cdrController.generateCDRReport(msisdn, startDate, endDate);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                cdrController.generateCDRReport(VALID_MSISDN, INVALID_DATE, END_DATE)
+        );
 
         // Проверка сообщения об ошибке
-        assertEquals("Неверный формат даты. Используйте yyyy-MM-dd'T'HH:mm:ss.", exception.getMessage());    }
+        assertEquals(DATE_FORMAT_ERROR, exception.getMessage());
+    }
 
     /**
      * Тест для метода {@link CDRController#generateCDRReport(String, String, String)}.
      * Проверяет обработку ошибки при отсутствии данных в БД.
-     * <p>
      * Ожидается, что метод вернет статус 404, так как отсутствие данных является ошибкой.
-     * </p>
      */
     @Test
     void testGenerateCDRReport_NoDataFound() {
-        // Подготовка данных
-        String msisdn = "79991112233";
-        String startDate = "2025-02-01T00:00:00";
-        String endDate = "2025-02-28T23:59:59";
 
-        LocalDateTime start = LocalDateTime.parse(startDate);
-        LocalDateTime end = LocalDateTime.parse(endDate);
-
-        when(cdrService.getCDRsForSubscriber(eq(msisdn), any(), any())).thenReturn(Collections.emptyList());
+        when(cdrService.getCDRsForSubscriber(eq(VALID_MSISDN), any(), any())).thenReturn(Collections.emptyList());
 
         // Вызов метода и проверка исключения
-        Exception exception = assertThrows(EntityNotFoundException.class, () -> {
-            cdrController.generateCDRReport(msisdn, startDate, endDate);
-        });
+        Exception exception = assertThrows(EntityNotFoundException.class, () ->
+                cdrController.generateCDRReport(VALID_MSISDN, START_DATE, END_DATE)
+        );
 
         // Проверка сообщения об ошибке
-        assertTrue(exception.getMessage().contains("не найдены записи"));
+        assertTrue(exception.getMessage().contains(NO_DATA_ERROR_MESSAGE));
     }
 }

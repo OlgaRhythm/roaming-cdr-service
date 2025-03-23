@@ -16,13 +16,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit-тесты для класса {@link RoamingCdrServiceApplication}.
- * <p>
  * Тесты проверяют корректность запуска приложения и выполнения метода {@link CommandLineRunner#run}.
- * </p>
  */
 @SpringBootTest
 @ExtendWith(MockitoExtension.class) // Подключаем Mockito
 class RoamingCdrServiceApplicationTests {
+
+	private static final String ERROR_GENERATING_CDR = "Ошибка генерации CDR";
 
 	@Mock
 	private CDRServiceImpl cdrServiceImpl; // Используем @Mock вместо @MockBean
@@ -32,22 +32,17 @@ class RoamingCdrServiceApplicationTests {
 
 	/**
 	 * Тест для проверки загрузки контекста Spring.
-	 * <p>
 	 * Проверяет, что контекст приложения успешно инициализируется.
-	 * </p>
 	 */
 	@Test
 	void contextLoads() {
-		ConfigurableApplicationContext context = SpringApplication.run(RoamingCdrServiceApplication.class);
-		assertNotNull(context, "Контекст Spring не должен быть null");
-		context.close(); // Закрываем контекст после завершения теста
-	}
+		try (ConfigurableApplicationContext context = SpringApplication.run(RoamingCdrServiceApplication.class)) {
+			assertNotNull(context, "Контекст Spring не должен быть null");
+		}	}
 
 	/**
 	 * Тест для метода {@link RoamingCdrServiceApplication#run(String...)}.
-	 * <p>
 	 * Проверяет, что метод {@link CDRServiceImpl#generateCDRs()} вызывается при запуске приложения.
-	 * </p>
 	 */
 	@Test
 	void testRun() throws Exception {
@@ -60,20 +55,18 @@ class RoamingCdrServiceApplicationTests {
 
 	/**
 	 * Тест для метода {@link RoamingCdrServiceApplication#run(String...)}.
-	 * <p>
 	 * Проверяет обработку исключения, если {@link CDRServiceImpl#generateCDRs()} выбрасывает исключение.
-	 * </p>
 	 */
 	@Test
 	void testRun_Exception() throws Exception {
 		// Настройка mock-объекта для выбрасывания исключения
-		doThrow(new RuntimeException("Ошибка генерации CDR")).when(cdrServiceImpl).generateCDRs();
+		doThrow(new RuntimeException(ERROR_GENERATING_CDR)).when(cdrServiceImpl).generateCDRs();
 
 		// Вызов метода run и проверка исключения
 		Exception exception = assertThrows(RuntimeException.class, () -> application.run());
 
 		// Проверка сообщения об ошибке
-		assertEquals("Ошибка генерации CDR", exception.getMessage());
+		assertEquals(ERROR_GENERATING_CDR, exception.getMessage());
 
 		// Проверка, что метод generateCDRs был вызван
 		verify(cdrServiceImpl, times(1)).generateCDRs();

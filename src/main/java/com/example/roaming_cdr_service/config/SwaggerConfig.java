@@ -1,4 +1,5 @@
 package com.example.roaming_cdr_service.config;
+
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import org.springframework.context.annotation.Bean;
@@ -6,9 +7,7 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * Конфигурационный класс для настройки Swagger/OpenAPI.
- * <p>
  * Настраивает документацию API, которая будет доступна через Swagger UI.
- * </p>
  */
 @Configuration
 public class SwaggerConfig {

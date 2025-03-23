@@ -6,7 +6,6 @@ import com.example.roaming_cdr_service.repository.CDRRepository;
 import com.example.roaming_cdr_service.repository.SubscriberRepository;
 import com.example.roaming_cdr_service.service.ICDRService;
 import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -18,9 +17,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Сервис для генерации CDR (Call Data Record) записей.
- * <p>
  * Генерирует тестовые данные о звонках и сохраняет их в базу данных.
- * </p>
  */
 @Service
 public class CDRServiceImpl implements ICDRService {
@@ -72,10 +69,12 @@ public class CDRServiceImpl implements ICDRService {
     public void generateCDRs() {
         List<Subscriber> subscribers = subscriberRepository.findAll();
         if (subscribers.isEmpty()) {
-            throw new IllegalStateException(ERROR_EMPTY_SUBSCRIBERS);        }
+            throw new IllegalStateException(ERROR_EMPTY_SUBSCRIBERS);
+        }
 
         if (subscribers.size() < 2) {
-            throw new IllegalStateException(ERROR_INSUFFICIENT_SUBSCRIBERS);        }
+            throw new IllegalStateException(ERROR_INSUFFICIENT_SUBSCRIBERS);
+        }
 
         LocalDateTime startDate = LocalDateTime.now().minusYears(1); // Начало периода генерации (год назад)
         LocalDateTime endDate = LocalDateTime.now(); // Конец периода генерации (текущее время)
@@ -121,14 +120,13 @@ public class CDRServiceImpl implements ICDRService {
         busySubscribers.put(caller.getMsisdn(), callEndTime);
         busySubscribers.put(receiver.getMsisdn(), callEndTime);
 
-        CDR cdr = new CDR();
-        cdr.setCallType(ThreadLocalRandom.current().nextBoolean() ? "01" : "02");
-        cdr.setMsisdn(caller.getMsisdn());
-        cdr.setOtherMsisdn(receiver.getMsisdn());
-        cdr.setCallStartTime(currentDate);
-        cdr.setCallEndTime(callEndTime);
-
-        return cdr;
+        return CDR.builder()
+                .callType(ThreadLocalRandom.current().nextBoolean() ? "01" : "02")
+                .msisdn(caller.getMsisdn())
+                .otherMsisdn(receiver.getMsisdn())
+                .callStartTime(currentDate)
+                .callEndTime(callEndTime)
+                .build();
     }
 
     /**

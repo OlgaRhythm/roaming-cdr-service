@@ -9,20 +9,20 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class CallDurationTest {
 
+    private static final long TOTAL_SECONDS = 3661; // 1 час, 1 минута, 1 секунда
+    private static final String EXPECTED_FORMATTED_TIME = "01:01:01";
+
     /**
      * Тест для метода {@link CallDuration#formatDuration(long)}.
      * Проверяет корректное форматирование времени.
      */
     @Test
     void testFormatDuration() {
-        // Подготовка данных
-        long totalSeconds = 3661; // 1 час, 1 минута, 1 секунда
-
         // Вызов метода
-        CallDuration callDuration = new CallDuration(totalSeconds);
+        CallDuration callDuration = new CallDuration(TOTAL_SECONDS);
 
         // Проверка результата
-        assertEquals("01:01:01", callDuration.getTotalTime());
+        assertEquals(EXPECTED_FORMATTED_TIME, callDuration.getTotalTime());
     }
 
 }

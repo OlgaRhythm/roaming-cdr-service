@@ -4,9 +4,7 @@ import lombok.Data;
 
 /**
  * Класс для представления длительности звонков.
- * <p>
  * Содержит общее время звонков в формате "HH:mm:ss".
- * </p>
  */
 @Data
 public class CallDuration {

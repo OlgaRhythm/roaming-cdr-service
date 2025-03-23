@@ -1,10 +1,8 @@
 package com.example.roaming_cdr_service.service.impl;
 
-import com.example.roaming_cdr_service.model.CDR;
 import com.example.roaming_cdr_service.model.Subscriber;
 import com.example.roaming_cdr_service.repository.CDRRepository;
 import com.example.roaming_cdr_service.repository.SubscriberRepository;
-import com.example.roaming_cdr_service.service.impl.CDRServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -22,6 +20,8 @@ import static org.mockito.Mockito.*;
  */
 class ICDRServiceImplTest {
 
+    private static final String TEST_MSISDN_1 = "79991112233";
+    private static final String TEST_MSISDN_2 = "79992221122";
     @Mock
     private CDRRepository cdrRepository;
 
@@ -44,8 +44,8 @@ class ICDRServiceImplTest {
     void testGenerateCDRs_Success() {
         // Подготовка данных - теперь два абонента, а не один
         List<Subscriber> mockSubscribers = List.of(
-                new Subscriber("79991112233"),
-                new Subscriber("79992221122")
+                new Subscriber(TEST_MSISDN_1),
+                new Subscriber(TEST_MSISDN_2)
         );
         when(subscriberRepository.findAll()).thenReturn(mockSubscribers);
 

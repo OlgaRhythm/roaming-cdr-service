@@ -8,10 +8,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
  * Основной класс приложения Roaming CDR Service.
- * <p>
  * Этот класс является точкой входа в приложение. Он запускает Spring Boot приложение
  * и инициализирует генерацию CDR записей с помощью {@link CDRServiceImpl}.
- * </p>
  */
 @SpringBootApplication
 public class RoamingCdrServiceApplication implements CommandLineRunner {
@@ -30,9 +28,7 @@ public class RoamingCdrServiceApplication implements CommandLineRunner {
 
 	/**
 	 * Метод, который выполняется после запуска приложения.
-	 * <p>
 	 * Инициализирует генерацию CDR записей с помощью {@link CDRServiceImpl}.
-	 * </p>
 	 *
 	 * @param args Аргументы командной строки.
 	 * @throws Exception Если произошла ошибка при выполнении.
