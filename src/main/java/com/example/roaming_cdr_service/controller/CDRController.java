@@ -21,22 +21,18 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 /**
  * Контроллер для работы с CDR (Call Data Record) отчётами.
- * <p>
  * Предоставляет REST API для генерации CDR-отчётов в формате CSV.
- * </p>
  */
 @RestController
 @RequestMapping("/cdr")
 public class CDRController {
 
     private final ICDRService cdrService;
-
     private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(DATE_FORMAT);
     private static final String REPORTS_DIRECTORY = "reports/";
@@ -45,8 +41,6 @@ public class CDRController {
     private static final String SUCCESS_REPORT_MESSAGE = "Отчет успешно создан. UUID: %s";
     private static final String ERROR_REPORT_CREATION = "Ошибка при создании отчета: %s";
 
-
-
     @Autowired
     public CDRController(ICDRService cdrService) {
         this.cdrService = cdrService;
@@ -54,9 +48,7 @@ public class CDRController {
 
     /**
      * Генерирует CDR-отчёт для указанного абонента за заданный период времени.
-     * <p>
      * Отчёт сохраняется в формате CSV в директорию {@code /reports}.
-     * </p>
      *
      * @param msisdn    Номер абонента, для которого генерируется отчёт.
      * @param startDate Начальная дата периода в формате {@code yyyy-MM-dd'T'HH:mm:ss}.
@@ -102,6 +94,18 @@ public class CDRController {
             throw new EntityNotFoundException(String.format(ERROR_NO_DATA_FOUND, msisdn));
         }
 
+        return saveReportToFile(msisdn, cdrs);
+    }
+
+    /**
+     * Сохраняет CDR-отчет в файл.
+     *
+     * @param msisdn    Номер абонента, для которого генерируется отчёт.
+     * @param cdrs  Список CDR записей
+     * @return Ответ с результатом операции
+     */
+    private ResponseEntity<String> saveReportToFile(String msisdn, List<CDR> cdrs) {
+
         // Генерируем уникальный UUID для имени файла
         String uuid = UUID.randomUUID().toString();
         String fileName = String.format("%s_%s.csv", msisdn, uuid);
@@ -115,24 +119,17 @@ public class CDRController {
             try (FileWriter writer = new FileWriter(filePath);
                  CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT)) {
 
-                // Заголовки CSV (опционально)
-//                csvPrinter.printRecord("callType", "msisdn", "otherMsisdn", "callStartTime", "callEndTime");
-
-                // Данные
                 for (CDR cdr : cdrs) {
                     csvPrinter.printRecord(
                             cdr.getCallType(),
                             cdr.getMsisdn(),
                             cdr.getOtherMsisdn(),
-                            cdr.getCallStartTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")), // Форматируем дату
-                            cdr.getCallEndTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")) // Форматируем дату
+                            cdr.getCallStartTime().format(DATE_TIME_FORMATTER),
+                            cdr.getCallEndTime().format(DATE_TIME_FORMATTER)
                     );
                 }
-
                 csvPrinter.flush();
             }
-
-            // Возвращаем UUID и статус
             return ResponseEntity.ok(String.format(SUCCESS_REPORT_MESSAGE, uuid));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(ERROR_REPORT_CREATION + e.getMessage());

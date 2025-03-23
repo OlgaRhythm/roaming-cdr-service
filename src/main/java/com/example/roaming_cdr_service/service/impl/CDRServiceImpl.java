@@ -53,7 +53,7 @@ public class CDRServiceImpl implements ICDRService {
 
     @PostConstruct
     public void initDatabase() {
-        if (subscriberRepository.count() == 0) { // Если таблица пустая, заполняем
+        if (subscriberRepository.count() == 0) {
             List<Subscriber> subscribers = List.of(
                     new Subscriber("79991112233"), new Subscriber("79992221122"),
                     new Subscriber("79993332211"), new Subscriber("79994443322"),
