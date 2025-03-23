@@ -4,7 +4,7 @@ import com.example.roaming_cdr_service.model.CDR;
 import com.example.roaming_cdr_service.model.Subscriber;
 import com.example.roaming_cdr_service.repository.CDRRepository;
 import com.example.roaming_cdr_service.repository.SubscriberRepository;
-import com.example.roaming_cdr_service.service.ICDRService;
+import com.example.roaming_cdr_service.service.CDRService;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +20,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * Генерирует тестовые данные о звонках и сохраняет их в базу данных.
  */
 @Service
-public class CDRServiceImpl implements ICDRService {
+public class CDRServiceImpl implements CDRService {
 
     private static final int BATCH_SIZE = 100;
     private static final int CALL_INTERVAL_SECONDS = 3600; // Средний интервал между звонками — 1 час

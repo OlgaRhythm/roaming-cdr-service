@@ -1,7 +1,7 @@
 package com.example.roaming_cdr_service.controller;
 
 import com.example.roaming_cdr_service.model.CDR;
-import com.example.roaming_cdr_service.service.ICDRService;
+import com.example.roaming_cdr_service.service.CDRService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.persistence.EntityNotFoundException;
@@ -14,7 +14,6 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Parameter;
-
 import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -32,7 +31,7 @@ import java.util.UUID;
 @RequestMapping("/cdr")
 public class CDRController {
 
-    private final ICDRService cdrService;
+    private final CDRService cdrService;
     private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(DATE_FORMAT);
     private static final String REPORTS_DIRECTORY = "reports/";
@@ -42,7 +41,7 @@ public class CDRController {
     private static final String ERROR_REPORT_CREATION = "Ошибка при создании отчета: %s";
 
     @Autowired
-    public CDRController(ICDRService cdrService) {
+    public CDRController(CDRService cdrService) {
         this.cdrService = cdrService;
     }
 

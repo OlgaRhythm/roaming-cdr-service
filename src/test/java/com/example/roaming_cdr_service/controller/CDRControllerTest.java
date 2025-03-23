@@ -1,7 +1,7 @@
 package com.example.roaming_cdr_service.controller;
 
 import com.example.roaming_cdr_service.model.CDR;
-import com.example.roaming_cdr_service.service.ICDRService;
+import com.example.roaming_cdr_service.service.CDRService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,11 +10,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -35,7 +33,7 @@ class CDRControllerTest {
 
 
     @Mock
-    private ICDRService cdrService;
+    private CDRService cdrService;
 
     @InjectMocks
     private CDRController cdrController;

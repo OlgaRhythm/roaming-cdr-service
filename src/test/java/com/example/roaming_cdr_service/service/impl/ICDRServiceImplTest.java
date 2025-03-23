@@ -8,17 +8,15 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
 import java.util.Collections;
 import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
  * Unit-тесты для класса {@link CDRServiceImpl}.
  */
-class ICDRServiceImplTest {
+class CDRServiceImplTest {
 
     private static final String TEST_MSISDN_1 = "79991112233";
     private static final String TEST_MSISDN_2 = "79992221122";
