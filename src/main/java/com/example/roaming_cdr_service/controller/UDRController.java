@@ -15,22 +15,25 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
  * Контроллер для работы с UDR (Usage Data Report) отчётами.
- * <p>
  * Предоставляет REST API для получения UDR отчётов по звонкам абонентов.
- * </p>
  */
 @RestController
 @RequestMapping("/udr")
 @Tag(name = "UDR API", description = "API для работы с UDR отчётами")
 public class UDRController {
+
+    private static final String DATE_FORMAT = "yyyy-MM";
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(DATE_FORMAT);
+    private static final String ERROR_INVALID_MONTH_FORMAT = "Неверный формат месяца. Используйте %s.";
+    private static final String ERROR_NO_DATA_FOUND = "Для абонента с номером %s не найдены записи за указанный период.";
 
     @Autowired
     private CDRRepository cdrRepository;
@@ -72,32 +75,19 @@ public class UDRController {
                 endDate = LocalDateTime.now();
             }
         } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Неверный формат месяца. Используйте yyyy-MM.");
+            throw new IllegalArgumentException(String.format(ERROR_INVALID_MONTH_FORMAT, DATE_FORMAT));
         }
 
-        List<CDR> cdrsAsCaller = cdrRepository.findByMsisdnAndCallStartTimeBetween(msisdn, startDate, endDate);
-        List<CDR> cdrsAsReceiver = cdrRepository.findByOtherMsisdnAndCallStartTimeBetween(msisdn, startDate, endDate);
+        List<CDR> allCdrs = new ArrayList<>();
+        allCdrs.addAll(cdrRepository.findByMsisdnAndCallStartTimeBetween(msisdn, startDate, endDate));
+        allCdrs.addAll(cdrRepository.findByOtherMsisdnAndCallStartTimeBetween(msisdn, startDate, endDate));
 
         // Проверяем, что есть такой абонент
-        if (cdrsAsCaller.isEmpty() && cdrsAsReceiver.isEmpty()) {
-            throw new EntityNotFoundException("Для абонента с номером " + msisdn + " не найдены записи за указанный период.");
+        if (allCdrs.isEmpty()) {
+            throw new EntityNotFoundException(String.format(ERROR_NO_DATA_FOUND, msisdn));
         }
-        List<CDR> allCdrs = new ArrayList<>();
-        allCdrs.addAll(cdrsAsCaller);
-        allCdrs.addAll(cdrsAsReceiver);
 
-        UDR udr = new UDR();
-        udr.setMsisdn(msisdn);
-        udr.setIncomingCall(new CallDuration(allCdrs.stream()
-                .filter(cdr -> cdr.getCallType().equals("02"))
-                .mapToLong(cdr -> Duration.between(cdr.getCallStartTime(), cdr.getCallEndTime()).getSeconds())
-                .sum()));
-        udr.setOutcomingCall(new CallDuration(allCdrs.stream()
-                .filter(cdr -> cdr.getCallType().equals("01"))
-                .mapToLong(cdr -> Duration.between(cdr.getCallStartTime(), cdr.getCallEndTime()).getSeconds())
-                .sum()));
-
-        return udr;
+        return createUDR(msisdn, allCdrs);
     }
 
     /**
@@ -119,41 +109,35 @@ public class UDRController {
             @Parameter(description = "Месяц в формате yyyy-MM", example = "2025-02")
             @RequestParam String month
     ) {
-        LocalDateTime startDate; // = LocalDateTime.parse(month + "-01T00:00:00");
-        LocalDateTime endDate; // = startDate.plusMonths(1);
+        LocalDateTime startDate;
+        LocalDateTime endDate;
 
         // Проверяем формат
         try {
             startDate = LocalDateTime.parse(month + "-01T00:00:00");
             endDate = startDate.plusMonths(1);
         } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Неверный формат месяца. Используйте yyyy-MM.");
+            throw new IllegalArgumentException(String.format(ERROR_INVALID_MONTH_FORMAT, DATE_FORMAT));
         }
 
-        List<CDR> allCdrs = cdrRepository.findByCallStartTimeBetween(startDate, endDate);
+        return cdrRepository.findByCallStartTimeBetween(startDate, endDate)
+                .stream()
+                .collect(Collectors.groupingBy(CDR::getMsisdn, Collectors.collectingAndThen(Collectors.toList(),
+                        cdrs -> createUDR(cdrs.get(0).getMsisdn(), cdrs))));
+    }
 
-        Map<String, List<CDR>> cdrsByMsisdn = allCdrs.stream()
-                .collect(Collectors.groupingBy(CDR::getMsisdn));
+    private UDR createUDR(String msisdn, List<CDR> cdrs) {
+        return UDR.builder()
+                .msisdn(msisdn)
+                .incomingCall(new CallDuration(getTotalCallDuration(cdrs, "02")))
+                .outcomingCall(new CallDuration(getTotalCallDuration(cdrs, "01")))
+                .build();
+    }
 
-        Map<String, UDR> udrMap = new HashMap<>();
-        for (Map.Entry<String, List<CDR>> entry : cdrsByMsisdn.entrySet()) {
-            String msisdn = entry.getKey();
-            List<CDR> cdrs = entry.getValue();
-
-            UDR udr = new UDR();
-            udr.setMsisdn(msisdn);
-            udr.setIncomingCall(new CallDuration(cdrs.stream()
-                    .filter(cdr -> cdr.getCallType().equals("02"))
-                    .mapToLong(cdr -> Duration.between(cdr.getCallStartTime(), cdr.getCallEndTime()).getSeconds())
-                    .sum()));
-            udr.setOutcomingCall(new CallDuration(cdrs.stream()
-                    .filter(cdr -> cdr.getCallType().equals("01"))
-                    .mapToLong(cdr -> Duration.between(cdr.getCallStartTime(), cdr.getCallEndTime()).getSeconds())
-                    .sum()));
-
-            udrMap.put(msisdn, udr);
-        }
-
-        return udrMap;
+    private long getTotalCallDuration(List<CDR> cdrs, String callType) {
+        return cdrs.stream()
+                .filter(cdr -> cdr.getCallType().equals(callType))
+                .mapToLong(cdr -> Duration.between(cdr.getCallStartTime(), cdr.getCallEndTime()).getSeconds())
+                .sum();
     }
 }

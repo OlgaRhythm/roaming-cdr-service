@@ -4,13 +4,10 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.PersistenceConstructor;
 
 /**
  * Класс для представления абонента.
- * <p>
  * Содержит информацию о номере абонента (MSISDN).
- * </p>
  */
 @Data
 @Entity
@@ -18,6 +15,7 @@ import org.springframework.data.annotation.PersistenceConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Subscriber {
+
     /**
      * Уникальный идентификатор абонента.
      */

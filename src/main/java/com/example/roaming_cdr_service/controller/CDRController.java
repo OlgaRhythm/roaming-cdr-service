@@ -1,7 +1,7 @@
 package com.example.roaming_cdr_service.controller;
 
 import com.example.roaming_cdr_service.model.CDR;
-import com.example.roaming_cdr_service.repository.CDRRepository;
+import com.example.roaming_cdr_service.service.ICDRService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.persistence.EntityNotFoundException;
@@ -21,27 +21,34 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 /**
  * Контроллер для работы с CDR (Call Data Record) отчётами.
- * <p>
  * Предоставляет REST API для генерации CDR-отчётов в формате CSV.
- * </p>
  */
 @RestController
 @RequestMapping("/cdr")
 public class CDRController {
+
+    private final ICDRService cdrService;
+    private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(DATE_FORMAT);
+    private static final String REPORTS_DIRECTORY = "reports/";
+    private static final String ERROR_INVALID_DATE_FORMAT = "Неверный формат даты. Используйте %s.";
+    private static final String ERROR_NO_DATA_FOUND = "Для абонента с номером %s не найдены записи за указанный период.";
+    private static final String SUCCESS_REPORT_MESSAGE = "Отчет успешно создан. UUID: %s";
+    private static final String ERROR_REPORT_CREATION = "Ошибка при создании отчета: %s";
+
     @Autowired
-    private CDRRepository cdrRepository;
+    public CDRController(ICDRService cdrService) {
+        this.cdrService = cdrService;
+    }
 
     /**
      * Генерирует CDR-отчёт для указанного абонента за заданный период времени.
-     * <p>
      * Отчёт сохраняется в формате CSV в директорию {@code /reports}.
-     * </p>
      *
      * @param msisdn    Номер абонента, для которого генерируется отчёт.
      * @param startDate Начальная дата периода в формате {@code yyyy-MM-dd'T'HH:mm:ss}.
@@ -63,72 +70,69 @@ public class CDRController {
             @Parameter(description = "Номер абонента", example = "79991112233")
             @RequestParam String msisdn,
 
-            @Parameter(description = "Начальная дата в формате yyyy-MM-dd'T'HH:mm:ss", example = "2025-02-01T00:00:00")
+            @Parameter(description = "Начальная дата в формате " + DATE_FORMAT, example = "2025-02-01T00:00:00")
             @RequestParam String startDate,
 
-            @Parameter(description = "Конечная дата в формате yyyy-MM-dd'T'HH:mm:ss", example = "2025-02-28T23:59:59")
+            @Parameter(description = "Конечная дата в формате " + DATE_FORMAT, example = "2025-02-28T23:59:59")
             @RequestParam String endDate
     ) {
 
-        LocalDateTime start; // = LocalDateTime.parse(startDate);
-        LocalDateTime end; // = LocalDateTime.parse(endDate);
+        LocalDateTime start;
+        LocalDateTime end;
 
         try {
-            start = LocalDateTime.parse(startDate);
-            end = LocalDateTime.parse(endDate);
+            start = LocalDateTime.parse(startDate, DATE_TIME_FORMATTER);
+            end = LocalDateTime.parse(endDate, DATE_TIME_FORMATTER);
         } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Неверный формат даты. Используйте yyyy-MM-dd'T'HH:mm:ss.");
+            throw new IllegalArgumentException(String.format(ERROR_INVALID_DATE_FORMAT, DATE_FORMAT));
         }
 
         // Получаем данные из БД
-        List<CDR> cdrsAsCaller = cdrRepository.findByMsisdnAndCallStartTimeBetween(msisdn, start, end);
-        List<CDR> cdrsAsReceiver = cdrRepository.findByOtherMsisdnAndCallStartTimeBetween(msisdn, start, end);
+        List<CDR> cdrs = cdrService.getCDRsForSubscriber(msisdn, start, end);
 
-        if (cdrsAsCaller.isEmpty() && cdrsAsReceiver.isEmpty()) {
-            throw new EntityNotFoundException("Для абонента с номером " + msisdn + " не найдены записи за указанный период.");
+        if (cdrs.isEmpty()) {
+            throw new EntityNotFoundException(String.format(ERROR_NO_DATA_FOUND, msisdn));
         }
 
-        // Объединяем результаты
-        List<CDR> cdrs = new ArrayList<>();
-        cdrs.addAll(cdrsAsCaller);
-        cdrs.addAll(cdrsAsReceiver);
+        return saveReportToFile(msisdn, cdrs);
+    }
+
+    /**
+     * Сохраняет CDR-отчет в файл.
+     *
+     * @param msisdn    Номер абонента, для которого генерируется отчёт.
+     * @param cdrs  Список CDR записей
+     * @return Ответ с результатом операции
+     */
+    private ResponseEntity<String> saveReportToFile(String msisdn, List<CDR> cdrs) {
 
         // Генерируем уникальный UUID для имени файла
         String uuid = UUID.randomUUID().toString();
-        String fileName = msisdn + "_" + uuid + ".csv";
-        String filePath = "reports/" + fileName;
+        String fileName = String.format("%s_%s.csv", msisdn, uuid);
+        String filePath = Paths.get(REPORTS_DIRECTORY, fileName).toString();
 
         try {
             // Создаем директорию, если она не существует
-            Files.createDirectories(Paths.get("reports"));
+            Files.createDirectories(Paths.get(REPORTS_DIRECTORY));
 
             // Записываем данные в CSV
             try (FileWriter writer = new FileWriter(filePath);
                  CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT)) {
 
-                // Заголовки CSV (опционально)
-//                csvPrinter.printRecord("callType", "msisdn", "otherMsisdn", "callStartTime", "callEndTime");
-
-                // Данные
                 for (CDR cdr : cdrs) {
                     csvPrinter.printRecord(
                             cdr.getCallType(),
                             cdr.getMsisdn(),
                             cdr.getOtherMsisdn(),
-                            cdr.getCallStartTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")), // Форматируем дату
-                            cdr.getCallEndTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")) // Форматируем дату
+                            cdr.getCallStartTime().format(DATE_TIME_FORMATTER),
+                            cdr.getCallEndTime().format(DATE_TIME_FORMATTER)
                     );
                 }
-
                 csvPrinter.flush();
             }
-
-            // Возвращаем UUID и статус
-            return ResponseEntity.ok("Отчет успешно создан. UUID: " + uuid);
+            return ResponseEntity.ok(String.format(SUCCESS_REPORT_MESSAGE, uuid));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Ошибка при создании отчета: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(ERROR_REPORT_CREATION + e.getMessage());
         }
     }
-
-
 }
